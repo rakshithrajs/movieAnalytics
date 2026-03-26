@@ -17,7 +17,7 @@ from pyflink.datastream.window import TumblingProcessingTimeWindows
 BOOTSTRAP_SERVERS = "localhost:9092"
 KAFKA_TOPIC = "movie_ratings"
 KAFKA_GROUP_ID = "flink_group"
-WINDOW_SECONDS = 10
+WINDOW_SECONDS = int(os.getenv("WINDOW_SECONDS", "3"))
 OUTLIER_THRESHOLD = 1.5
 JOB_NAME = "Advanced Movie Analytics Streaming Job"
 ENABLE_REDIS_SINK = os.getenv("ENABLE_REDIS_SINK", "1") == "1"

@@ -31,4 +31,4 @@ for _, row in df.iterrows():
     producer.send("movie_ratings", value=data)
     print("Sent: ", data)
 
-    time.sleep(0.05)
+    time.sleep(0.2)

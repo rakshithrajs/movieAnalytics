@@ -28,42 +28,78 @@ export class AnalyticsWsClient {
     private socket: WebSocket | null = null;
     private reconnectAttempts = 0;
     private reconnectTimer: number | null = null;
+    private shouldReconnect = true;
 
     connect(url: string): void {
-        useAnalyticsStore.getState().setStatus("connecting");
-        this.socket = new WebSocket(url);
+        this.shouldReconnect = true;
 
-        this.socket.onopen = () => {
+        if (
+            this.socket &&
+            (this.socket.readyState === WebSocket.OPEN ||
+                this.socket.readyState === WebSocket.CONNECTING)
+        ) {
+            return;
+        }
+
+        if (this.reconnectTimer) {
+            window.clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
+
+        useAnalyticsStore.getState().setStatus("connecting");
+        const socket = new WebSocket(url);
+        this.socket = socket;
+
+        socket.onopen = () => {
+            if (this.socket !== socket) {
+                return;
+            }
             this.reconnectAttempts = 0;
             useAnalyticsStore.getState().setStatus("connected");
             this.send({ action: "subscribe", rooms: ROOM_TYPES });
             this.send({ action: "snapshot", rooms: ROOM_TYPES });
         };
 
-        this.socket.onmessage = (messageEvent) => {
+        socket.onmessage = (messageEvent) => {
+            if (this.socket !== socket) {
+                return;
+            }
             this.handleMessage(messageEvent.data);
         };
 
-        this.socket.onclose = () => {
+        socket.onclose = () => {
+            if (this.socket !== socket) {
+                return;
+            }
+            this.socket = null;
             useAnalyticsStore.getState().setStatus("disconnected");
-            this.scheduleReconnect(url);
+            if (this.shouldReconnect) {
+                this.scheduleReconnect(url);
+            }
         };
 
-        this.socket.onerror = () => {
+        socket.onerror = () => {
+            if (this.socket !== socket) {
+                return;
+            }
             useAnalyticsStore.getState().setStatus("disconnected");
         };
     }
 
     disconnect(): void {
+        this.shouldReconnect = false;
+
         if (this.reconnectTimer) {
             window.clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
         }
 
         if (this.socket && this.socket.readyState <= WebSocket.OPEN) {
-            this.socket.close();
+            const socket = this.socket;
+            this.socket = null;
+            socket.close();
         }
 
-        this.socket = null;
         useAnalyticsStore.getState().setStatus("disconnected");
     }
 
@@ -117,11 +153,24 @@ export class AnalyticsWsClient {
     }
 
     private scheduleReconnect(url: string): void {
+        if (!this.shouldReconnect || this.reconnectTimer) {
+            return;
+        }
+
+        if (
+            this.socket &&
+            (this.socket.readyState === WebSocket.OPEN ||
+                this.socket.readyState === WebSocket.CONNECTING)
+        ) {
+            return;
+        }
+
         const baseDelay = Math.min(30000, 1000 * 2 ** this.reconnectAttempts);
         const jitter = Math.round(Math.random() * 250);
         this.reconnectAttempts += 1;
 
         this.reconnectTimer = window.setTimeout(() => {
+            this.reconnectTimer = null;
             this.connect(url);
         }, baseDelay + jitter);
     }

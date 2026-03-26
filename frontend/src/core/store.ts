@@ -31,10 +31,27 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
 
     applySnapshot: (snapshot) =>
         set({
-            byType: snapshot.by_type,
-            latestByEntity: snapshot.latest,
-            alerts: (snapshot.by_type?.outlier ?? []).slice(-200),
-            sequence: snapshot.seq,
+            byType:
+                (
+                    snapshot &&
+                    typeof snapshot.by_type === "object" &&
+                    snapshot.by_type != null
+                ) ?
+                    snapshot.by_type
+                :   {},
+            latestByEntity:
+                (
+                    snapshot &&
+                    typeof snapshot.latest === "object" &&
+                    snapshot.latest != null
+                ) ?
+                    snapshot.latest
+                :   {},
+            alerts:
+                snapshot && Array.isArray(snapshot.by_type?.outlier) ?
+                    snapshot.by_type.outlier.slice(-200)
+                :   [],
+            sequence: Number(snapshot?.seq ?? 0),
         }),
 
     applyPatch: (event, seq) =>

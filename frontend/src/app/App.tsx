@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from "react";
 
 import { useAnalyticsStore } from "../core/store";
-import { tokens } from "../core/theme/tokens";
 import { AnalyticsWsClient } from "../core/ws-client";
 import { OverviewSurface } from "../surfaces/OverviewSurface";
 
@@ -20,33 +19,25 @@ export function App() {
     }, []);
 
     const statusText = useMemo(() => {
-        if (status === "connected") return "Live";
-        if (status === "connecting") return "Connecting";
+        if (status === "connected") return "LIVE";
+        if (status === "connecting") return "Connecting...";
         return "Offline";
     }, [status]);
 
     return (
-        <main
-            className="app-shell"
-            style={{ fontFamily: tokens.typography.body }}
-        >
-            <header className="top-bar">
-                <div>
-                    <h1>Real-Time Movie Analytics</h1>
-                    <p>
-                        Live view of top movies, genre performance, and notable
-                        rating changes.
-                    </p>
+        <div className="app-shell">
+            <header className="app-header">
+                <div className="app-title">
+                    <h1>CinemaStream Analytics</h1>
+                    <span className="subtitle">Real-time movie rating insights</span>
                 </div>
-
-                <div className="status-block">
-                    <span className={`status-dot status-${status}`} />
+                <div className={`status-orb ${status}`}>
+                    <span className="dot" />
                     <span>{statusText}</span>
-                    <code>seq {sequence}</code>
+                    <span className="seq">#{sequence.toLocaleString()}</span>
                 </div>
             </header>
-
             <OverviewSurface />
-        </main>
+        </div>
     );
 }
