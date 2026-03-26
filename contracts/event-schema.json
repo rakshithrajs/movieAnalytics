@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bigdata.local/contracts/event-schema.json",
+  "title": "Movie Analytics Event",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "subtype",
+    "payload",
+    "severity"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "movie",
+        "genre",
+        "tag",
+        "user",
+        "trend",
+        "hot",
+        "distribution",
+        "global",
+        "time",
+        "active_user",
+        "outlier",
+        "year_avg",
+        "year_activity",
+        "year_best_genre"
+      ]
+    },
+    "subtype": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "elevated",
+        "critical"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
