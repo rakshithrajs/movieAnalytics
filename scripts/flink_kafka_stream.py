@@ -17,7 +17,7 @@ from pyflink.datastream.window import TumblingProcessingTimeWindows
 BOOTSTRAP_SERVERS = "localhost:9092"
 KAFKA_TOPIC = "movie_ratings"
 KAFKA_GROUP_ID = "flink_group"
-WINDOW_SECONDS = int(os.getenv("WINDOW_SECONDS", "3"))
+WINDOW_SECONDS = int(os.getenv("WINDOW_SECONDS", "1"))
 OUTLIER_THRESHOLD = 1.5
 JOB_NAME = "Advanced Movie Analytics Streaming Job"
 ENABLE_REDIS_SINK = os.getenv("ENABLE_REDIS_SINK", "1") == "1"
@@ -98,14 +98,6 @@ def build_redis_sink_mapper():
         return record
 
     return publish
-
-
-def parse_data(value: str) -> Optional[Dict[str, Any]]:
-    try:
-        return json.loads(value)
-    except (TypeError, ValueError, json.JSONDecodeError):
-        return None
-
 
 def build_trending_mapper():
     prev_avg = {}
@@ -399,7 +391,7 @@ def build_pipeline() -> None:
         "Kafka Source",
     )
 
-    parsed = raw_stream.map(parse_data).filter(lambda x: x is not None)
+    parsed = raw_stream.map(lambda value: json.loads(value)).filter(lambda x: x is not None)
     window = TumblingProcessingTimeWindows.of(Time.seconds(WINDOW_SECONDS))
 
     movie_stream = (
@@ -553,7 +545,7 @@ def build_pipeline() -> None:
         movie_stream.print()
 
     # movie_stream.print()
-    genre_stream.print()
+    # genre_stream.print()
     # tag_stream.print()
     # global_stream.print()
     # user_stream.print()
